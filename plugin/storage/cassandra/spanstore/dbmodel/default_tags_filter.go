@@ -16,28 +16,17 @@ package dbmodel
 
 import "github.com/uber/jaeger/model"
 
-// GetAllUniqueTags creates a list of all unique tags found in a span and process
-func GetAllUniqueTags(span *model.Span) []TagInsertion {
+// DefaultTagFilter returns a filter that retrieves all tags from span.Tags, span.Logs, and span.Process.
+func DefaultTagFilter() FilterTags {
+	return filterNothing
+}
+
+func filterNothing(span *model.Span) []TagInsertion {
 	process := span.Process
 	allTags := span.Tags
 	allTags = append(allTags, process.Tags...)
 	for _, log := range span.Logs {
 		allTags = append(allTags, log.Fields...)
 	}
-	allTags.Sort()
-	uniqueTags := make([]TagInsertion, 0, len(allTags))
-	for i := range allTags {
-		if allTags[i].VType == model.BinaryType {
-			continue // do not index binary tags
-		}
-		if i > 0 && allTags[i-1].Equal(&allTags[i]) {
-			continue // skip identical tags
-		}
-		uniqueTags = append(uniqueTags, TagInsertion{
-			ServiceName: process.ServiceName,
-			TagKey:      allTags[i].Key,
-			TagValue:    allTags[i].AsString(),
-		})
-	}
-	return uniqueTags
+	return getUniqueTags(process.ServiceName, allTags)
 }

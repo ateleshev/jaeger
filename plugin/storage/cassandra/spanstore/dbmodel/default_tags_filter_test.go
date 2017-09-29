@@ -21,9 +21,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetUniqueTags(t *testing.T) {
+func TestDefaultTagFilter(t *testing.T) {
 	expectedTags := getTestUniqueTags()
-	uniqueTags := GetAllUniqueTags(getTestJaegerSpan())
+	uniqueTags := DefaultTagFilter()(getTestJaegerSpan())
 	if !assert.EqualValues(t, expectedTags, uniqueTags) {
 		for _, diff := range pretty.Diff(expectedTags, uniqueTags) {
 			t.Log(diff)
